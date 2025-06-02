@@ -37,6 +37,7 @@ echo "Starting Grafana..."
 # Wait for Grafana to be ready
 wait_for_service localhost ${PORT:-3000} "Grafana"
 
-# Keep the container running
-tail -f /dev/null
+# Start FastAPI application
+echo "Starting FastAPI application..."
+uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-3000} --proxy-headers --forwarded-allow-ips="*"
 

@@ -24,10 +24,7 @@ RUN curl -fsSL https://packages.grafana.com/gpg.key | gpg --dearmor -o /usr/shar
     && echo "deb [signed-by=/usr/share/keyrings/grafana-archive-keyring.gpg] https://packages.grafana.com/oss/deb stable main" | tee /etc/apt/sources.list.d/grafana.list \
     && apt-get update \
     && apt-get install -y grafana \
-    && rm -rf /var/lib/apt/lists/*
-
-# Create Grafana directories and set permissions
-RUN mkdir -p /var/lib/grafana \
+    && mkdir -p /var/lib/grafana \
     && mkdir -p /var/log/grafana \
     && mkdir -p /var/lib/grafana/plugins \
     && mkdir -p /var/run/grafana \
@@ -36,9 +33,9 @@ RUN mkdir -p /var/lib/grafana \
     && mkdir -p /etc/grafana/provisioning/datasources \
     && chown -R grafana:grafana /var/lib/grafana \
     && chown -R grafana:grafana /var/log/grafana \
-    && chown -R grafana:grafana /usr/share/grafana \
     && chown -R grafana:grafana /var/run/grafana \
-    && chown -R grafana:grafana /etc/grafana
+    && chown -R grafana:grafana /etc/grafana \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
 COPY requirements.txt .
@@ -59,9 +56,12 @@ RUN chmod +x entrypoint.sh
 # Create necessary directories
 RUN mkdir -p /prometheus /grafana
 
-# Expose necessary ports
-# Grafana: 3000, Prometheus: 9090
-EXPOSE 3000 9090
+# Expose the port that will be used by Railway
+EXPOSE ${PORT:-3000}
+
+# Set environment variables
+ENV GF_SERVER_HTTP_PORT=${PORT:-3000}
+ENV PROMETHEUS_PORT=9091
 
 # Set the entrypoint
 ENTRYPOINT ["/app/entrypoint.sh"]

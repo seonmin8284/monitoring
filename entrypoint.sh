@@ -19,12 +19,12 @@ wait_for_service() {
 
 # Start Prometheus in the background
 echo "Starting Prometheus..."
-/usr/local/bin/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus &
+/usr/local/bin/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus --web.listen-address=:${PROMETHEUS_PORT} &
 
 # Wait for Prometheus to be ready
-wait_for_service localhost 9090 "Prometheus"
+wait_for_service localhost ${PROMETHEUS_PORT} "Prometheus"
 
-# Start Grafana in the background with debug mode
+# Start Grafana in the background
 echo "Starting Grafana..."
 /usr/sbin/grafana-server \
   --config=/etc/grafana/grafana.ini \
@@ -32,8 +32,11 @@ echo "Starting Grafana..."
   --pidfile=/var/run/grafana/grafana-server.pid \
   --packaging=docker \
   cfg:default.log.mode=console \
-  --debug &
+  cfg:server.http_port=${PORT:-3000} &
 
 # Wait for Grafana to be ready
-wait_for_service localhost 3000 "Grafana"
+wait_for_service localhost ${PORT:-3000} "Grafana"
+
+# Keep the container running
+tail -f /dev/null
 
